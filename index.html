@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recycling Rush</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient to bottom right, #e0f2f7, #bbdefb; /* Light blue gradient */
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            color: #333;
+        }
+
+        .game-container {
+            background-color: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            padding: 25px;
+            text-align: center;
+            max-width: 90%; /* Responsive width */
+            width: 800px; /* Max width for larger screens */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            border: 2px solid #90caf9;
+        }
+
+        h1 {
+            color: #1976d2;
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 2.5em; /* Larger title */
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #424242;
+        }
+
+        .info-item span {
+            color: #1b5e20; /* Dark green for values */
+        }
+
+        canvas {
+            background-color: #f0f4c3; /* Light green background for play area */
+            border: 2px solid #8bc34a; /* Green border */
+            border-radius: 10px;
+            display: block;
+            touch-action: none; /* Prevent default touch actions like scrolling/zooming */
+            width: 100%; /* Make canvas responsive */
+            max-width: 750px; /* Max width for canvas */
+            aspect-ratio: 1.5 / 1; /* Maintain aspect ratio */
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap; /* Allow wrapping on small screens */
+            justify-content: center;
+        }
+
+        button {
+            background-color: #4caf50; /* Green button */
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            outline: none; /* Remove focus outline */
+        }
+
+        button:hover {
+            background-color: #66bb6a; /* Lighter green on hover */
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        button:active {
+            background-color: #388e3c; /* Darker green on active */
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .message-box {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .message-content {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 90%;
+            width: 450px;
+            transform: scale(0.9);
+            animation: popUp 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+            border: 2px solid #2196f3;
+        }
+
+        .message-content h2 {
+            color: #2196f3;
+            font-size: 2.2em;
+            margin-bottom: 15px;
+        }
+
+        .message-content p {
+            font-size: 1.3em;
+            color: #555;
+            margin-bottom: 25px;
+        }
+
+        .message-content button {
+            background-color: #2196f3; /* Blue button for messages */
+        }
+
+        .message-content button:hover {
+            background-color: #42a5f5;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes popUp {
+            from { transform: scale(0.7); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .game-info {
+                font-size: 1em;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .game-info .info-item {
+                width: 100%; /* Full width for each item */
+            }
+
+            button {
+                padding: 10px 20px;
+                font-size: 1em;
+            }
+
+            .game-container {
+                padding: 15px;
+            }
+
+            .message-content {
+                padding: 25px;
+            }
+            .message-content h2 {
+                font-size: 1.8em;
+            }
+            .message-content p {
+                font-size: 1.1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Recycling Rush</h1>
+        <div class="game-info">
+            <div class="info-item">Score: <span id="score">0</span></div>
+            <div class="info-item">Time: <span id="timer">60</span>s</div>
+        </div>
+        <canvas id="gameCanvas"></canvas>
+        <div class="controls">
+            <button id="startButton">Start Game</button>
+            <button id="restartButton" style="display: none;">Restart Game</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreDisplay = document.getElementById('score');
+        const timerDisplay = document.getElementById('timer');
+        const startButton = document.getElementById('startButton');
+        const restartButton = document.getElementById('restartButton');
+
+        // Game state variables
+        let score = 0;
+        let timeLeft = 60; // seconds
+        let gameRunning = false;
+        let gameOver = false;
+        let gameInterval;
+        let trashSpawnInterval;
+        let trashItems = [];
+        let bins = [];
+        let draggedItem = null;
+        let dragOffsetX, dragOffsetY;
+
+        // Configuration
+        const TRASH_SIZE = 40;
+        const BIN_WIDTH = 100;
+        const BIN_HEIGHT = 120;
+        const BIN_Y_OFFSET = 20; // Distance from bottom of canvas
+        const GAME_DURATION = 60; // seconds
+        const SPAWN_RATE = 1500; // milliseconds between new trash items
+
+        // Trash types and their colors/emojis
+        const trashTypes = {
+            plastic: { color: '#03a9f4', emoji: '🥤', label: 'Plastic' }, // Light blue
+            paper: { color: '#ffeb3b', emoji: '📄', label: 'Paper' },     // Yellow
+            glass: { color: '#4caf50', emoji: '🍾', label: 'Glass' }      // Green
+        };
+
+        // --- Utility Functions ---
+
+        /**
+         * Shows a custom message box.
+         * @param {string} title - The title of the message.
+         * @param {string} message - The message content.
+         * @param {function} onConfirm - Callback function when 'OK' is clicked.
+         */
+        function showMessageBox(title, message, onConfirm) {
+            let messageBox = document.createElement('div');
+            messageBox.className = 'message-box';
+            messageBox.innerHTML = `
+                <div class="message-content">
+                    <h2>${title}</h2>
+                    <p>${message}</p>
+                    <button id="messageBoxOkButton">OK</button>
+                </div>
+            `;
+            document.body.appendChild(messageBox);
+
+            document.getElementById('messageBoxOkButton').onclick = () => {
+                document.body.removeChild(messageBox);
+                if (onConfirm) onConfirm();
+            };
+        }
+
+        /**
+         * Resizes the canvas to fit the container and updates bin positions.
+         */
+        function resizeCanvas() {
+            // Set canvas display size (CSS handles actual visual size)
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetWidth / 1.5; // Maintain 1.5:1 aspect ratio
+
+            // Recalculate bin positions based on new canvas size
+            const binSpacing = (canvas.width - (bins.length * BIN_WIDTH)) / (bins.length + 1);
+            bins.forEach((bin, index) => {
+                bin.x = (index + 1) * binSpacing + index * BIN_WIDTH;
+                bin.y = canvas.height - BIN_HEIGHT - BIN_Y_OFFSET;
+            });
+
+            // Redraw everything if game is running or not
+            if (gameRunning || gameOver) {
+                draw();
+            } else {
+                drawInitialState();
+            }
+        }
+
+        /**
+         * Initializes game bins.
+         */
+        function initBins() {
+            bins = [
+                { type: 'plastic', x: 0, y: 0, width: BIN_WIDTH, height: BIN_HEIGHT, color: trashTypes.plastic.color, label: trashTypes.plastic.label },
+                { type: 'paper', x: 0, y: 0, width: BIN_WIDTH, height: BIN_HEIGHT, color: trashTypes.paper.color, label: trashTypes.paper.label },
+                { type: 'glass', x: 0, y: 0, width: BIN_WIDTH, height: BIN_HEIGHT, color: trashTypes.glass.color, label: trashTypes.glass.label }
+            ];
+            resizeCanvas(); // Position bins correctly after init
+        }
+
+        /**
+         * Creates a new trash item at a random horizontal position.
+         * @returns {object} - The new trash item object.
+         */
+        function createTrash() {
+            const types = Object.keys(trashTypes);
+            const randomType = types[Math.floor(Math.random() * types.length)];
+            const typeInfo = trashTypes[randomType];
+
+            return {
+                type: randomType,
+                x: Math.random() * (canvas.width - TRASH_SIZE),
+                y: -TRASH_SIZE, // Start above canvas
+                width: TRASH_SIZE,
+                height: TRASH_SIZE,
+                velocityY: (Math.random() * 0.5) + 0.5, // Random speed
+                isDragged: false,
+                color: typeInfo.color,
+                emoji: typeInfo.emoji
+            };
+        }
+
+        // --- Drawing Functions ---
+
+        /**
+         * Draws a single trash item.
+         * @param {object} item - The trash item to draw.
+         */
+        function drawTrash(item) {
+            ctx.beginPath();
+            ctx.arc(item.x + item.width / 2, item.y + item.height / 2, item.width / 2, 0, Math.PI * 2);
+            ctx.fillStyle = item.color;
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+            ctx.shadowBlur = 5;
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 2;
+            ctx.fill();
+            ctx.shadowColor = 'transparent'; // Reset shadow
+
+            // Draw emoji
+            ctx.font = `${item.width * 0.7}px Arial`; // Adjust font size based on item width
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(item.emoji, item.x + item.width / 2, item.y + item.height / 2 + (item.width * 0.05)); // Slight adjustment for emoji centering
+        }
+
+        /**
+         * Draws a single bin.
+         * @param {object} bin - The bin to draw.
+         */
+        function drawBin(bin) {
+            ctx.fillStyle = bin.color;
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 3;
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+            ctx.shadowBlur = 8;
+            ctx.shadowOffsetX = 4;
+            ctx.shadowOffsetY = 4;
+
+            // Draw bin body
+            ctx.beginPath();
+            ctx.roundRect(bin.x, bin.y, bin.width, bin.height, [10, 10, 0, 0]); // Rounded top corners
+            ctx.fill();
+            ctx.stroke();
+
+            // Draw bin opening/lid part
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+            ctx.fillRect(bin.x - 5, bin.y - 20, bin.width + 10, 25);
+            ctx.strokeRect(bin.x - 5, bin.y - 20, bin.width + 10, 25);
+
+            ctx.shadowColor = 'transparent'; // Reset shadow
+
+            // Draw bin label
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 16px Inter';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.fillText(bin.label, bin.x + bin.width / 2, bin.y + bin.height - 10);
+        }
+
+        /**
+         * Clears the canvas and draws all game elements.
+         */
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
+            ctx.fillStyle = '#f0f4c3'; // Canvas background
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            bins.forEach(drawBin);
+            trashItems.forEach(drawTrash);
+
+            // Update info displays
+            scoreDisplay.textContent = score;
+            timerDisplay.textContent = timeLeft;
+        }
+
+        /**
+         * Draws the initial state of the game (before start).
+         */
+        function drawInitialState() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#f0f4c3';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            bins.forEach(drawBin);
+
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            ctx.font = 'bold 30px Inter';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('Click Start to Play!', canvas.width / 2, canvas.height / 2 - 20);
+            ctx.font = '20px Inter';
+            ctx.fillText('Drag falling trash to the correct bin!', canvas.width / 2, canvas.height / 2 + 20);
+        }
+
+        // --- Game Logic ---
+
+        /**
+         * Updates game state: moves trash, checks for collisions.
+         */
+        function update() {
+            if (!gameRunning) return;
+
+            // Move falling trash
+            for (let i = trashItems.length - 1; i >= 0; i--) {
+                const item = trashItems[i];
+                if (!item.isDragged) {
+                    item.y += item.velocityY;
+
+                    // If trash falls off screen
+                    if (item.y + item.height > canvas.height + 50) {
+                        trashItems.splice(i, 1);
+                        score -= 5; // Penalty for missed trash
+                        if (score < 0) score = 0; // Prevent negative score
+                    }
+                }
+            }
+            draw();
+        }
+
+        /**
+         * Starts the game timer.
+         */
+        function startTimer() {
+            timeLeft = GAME_DURATION;
+            timerDisplay.textContent = timeLeft;
+            gameInterval = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        /**
+         * Spawns new trash items at regular intervals.
+         */
+        function startTrashSpawn() {
+            trashSpawnInterval = setInterval(() => {
+                if (gameRunning) {
+                    trashItems.push(createTrash());
+                }
+            }, SPAWN_RATE);
+        }
+
+        /**
+         * Starts the game.
+         */
+        function startGame() {
+            score = 0;
+            timeLeft = GAME_DURATION;
+            trashItems = [];
+            gameRunning = true;
+            gameOver = false;
+
+            startButton.style.display = 'none';
+            restartButton.style.display = 'inline-block';
+
+            startTimer();
+            startTrashSpawn();
+            requestAnimationFrame(gameLoop); // Start the animation loop
+        }
+
+        /**
+         * Ends the game.
+         */
+        function endGame() {
+            gameRunning = false;
+            gameOver = true;
+            clearInterval(gameInterval);
+            clearInterval(trashSpawnInterval);
+
+            showMessageBox(
+                'Game Over!',
+                `Your final score is: ${score}`,
+                () => {
+                    drawInitialState(); // Show initial state after game over
+                    startButton.style.display = 'inline-block';
+                    restartButton.style.display = 'none';
+                }
+            );
+        }
+
+        /**
+         * The main game animation loop.
+         */
+        function gameLoop() {
+            update();
+            if (gameRunning) {
+                requestAnimationFrame(gameLoop);
+            }
+        }
+
+        // --- Event Handlers ---
+
+        /**
+         * Handles mouse down (or touch start) events.
+         * @param {MouseEvent|TouchEvent} e - The event object.
+         */
+        function handlePointerDown(e) {
+            if (!gameRunning || draggedItem) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            // Get canvas coordinates
+            const mouseX = (clientX - rect.left) * (canvas.width / rect.width);
+            const mouseY = (clientY - rect.top) * (canvas.height / rect.height);
+
+            // Check if any trash item is clicked
+            for (let i = trashItems.length - 1; i >= 0; i--) {
+                const item = trashItems[i];
+                if (mouseX > item.x && mouseX < item.x + item.width &&
+                    mouseY > item.y && mouseY < item.y + item.height) {
+                    draggedItem = item;
+                    draggedItem.isDragged = true;
+                    // Move dragged item to the end of array so it draws on top
+                    trashItems.splice(i, 1);
+                    trashItems.push(draggedItem);
+
+                    dragOffsetX = mouseX - item.x;
+                    dragOffsetY = mouseY - item.y;
+                    break;
+                }
+            }
+        }
+
+        /**
+         * Handles mouse move (or touch move) events.
+         * @param {MouseEvent|TouchEvent} e - The event object.
+         */
+        function handlePointerMove(e) {
+            if (!gameRunning || !draggedItem) return;
+
+            e.preventDefault(); // Prevent scrolling on touch devices
+
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            const mouseX = (clientX - rect.left) * (canvas.width / rect.width);
+            const mouseY = (clientY - rect.top) * (canvas.height / rect.height);
+
+            draggedItem.x = mouseX - dragOffsetX;
+            draggedItem.y = mouseY - dragOffsetY;
+
+            // Keep item within canvas bounds
+            if (draggedItem.x < 0) draggedItem.x = 0;
+            if (draggedItem.x + draggedItem.width > canvas.width) draggedItem.x = canvas.width - draggedItem.width;
+            if (draggedItem.y < 0) draggedItem.y = 0;
+            if (draggedItem.y + draggedItem.height > canvas.height) draggedItem.y = canvas.height - draggedItem.height;
+
+            draw(); // Redraw frequently while dragging
+        }
+
+        /**
+         * Handles mouse up (or touch end) events.
+         * @param {MouseEvent|TouchEvent} e - The event object.
+         */
+        function handlePointerUp(e) {
+            if (!gameRunning || !draggedItem) return;
+
+            draggedItem.isDragged = false;
+
+            // Check if dropped into a bin
+            let droppedInBin = false;
+            for (const bin of bins) {
+                // Simple AABB collision detection
+                if (draggedItem.x < bin.x + bin.width &&
+                    draggedItem.x + draggedItem.width > bin.x &&
+                    draggedItem.y < bin.y + bin.height &&
+                    draggedItem.y + draggedItem.height > bin.y) {
+                    // Collision detected
+                    if (draggedItem.type === bin.type) {
+                        score += 10; // Correct sort
+                    } else {
+                        score -= 5; // Incorrect sort
+                        if (score < 0) score = 0;
+                    }
+                    // Remove item from array regardless of correct/incorrect sort
+                    trashItems = trashItems.filter(item => item !== draggedItem);
+                    droppedInBin = true;
+                    break;
+                }
+            }
+
+            // If not dropped in any bin, it falls again
+            if (!droppedInBin) {
+                // You could reset its velocity here or let it continue falling
+                // For now, it just stops being dragged and continues its descent in update()
+            }
+
+            draggedItem = null;
+            draw();
+        }
+
+        // --- Event Listeners ---
+        startButton.addEventListener('click', startGame);
+        restartButton.addEventListener('click', startGame);
+
+        canvas.addEventListener('mousedown', handlePointerDown);
+        canvas.addEventListener('mousemove', handlePointerMove);
+        canvas.addEventListener('mouseup', handlePointerUp);
+
+        canvas.addEventListener('touchstart', handlePointerDown, { passive: false });
+        canvas.addEventListener('touchmove', handlePointerMove, { passive: false });
+        canvas.addEventListener('touchend', handlePointerUp);
+
+        window.addEventListener('resize', resizeCanvas); // Handle window resize
+
+        // Initial setup
+        window.onload = function() {
+            initBins(); // Initialize bins first
+            resizeCanvas(); // Then resize canvas and position bins
+            drawInitialState(); // Draw the initial game state
+        };
+
+    </script>
+</body>
+</html>
